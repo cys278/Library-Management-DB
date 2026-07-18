@@ -1,0 +1,40 @@
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# macOS Trash/Volume Folders
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Xcode
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.xcworkspace
+!default.xcworkspace
+xcuserdata/
+*.xccheckout
+*.xcscmstate
+
+# Visual Studio Code
+.vscode/
+.history
+*.local
+*.code-workspace
+
+# JetBrains (IntelliJ, AppCode, CLion)
+.idea/
+*.iml
+*.iws
+*.ipr
+*.ids
