@@ -3,22 +3,26 @@
 {% block title %}Find items | Not Google Library{% endblock %}
 
 {% block content %}
-<section class="page-heading">
+<section class="page-heading collection-heading">
     <div>
         <span class="eyebrow">Library collection</span>
         <h1>Find an item</h1>
         <p>Search by title, author or ISBN.</p>
     </div>
+    {% if items %}
+    <strong>{{ items |length}}</strong>
+    <span>result{% if items|length!=1%}s{% endif%}</span>
+    {% endif%}
 </section>
 
-<form class="search-bar" method="get" action="{{ url_for('items') }}">
+<form class="search-bar collection-search" method="get" action="{{ url_for('items') }}">
     <div class="field search-field">
-        <label class="sr-only" for="q">Search collection</label>
-        <input id="q" name="q" type="search" value="{{ search }}" placeholder="Title, author or ISBN">
+        <label for="q">Search </label>
+        <input id="q" name="q" type="search" value="{{ search }}" placeholder="Title, author, ISBN...">
     </div>
 
-    <div class="field">
-        <label class="sr-only" for="type">Item type</label>
+    <div class="field filter-field">
+        <label for="type">Item type</label>
 
         <select id="type" name="type">
             <option value="">All item types</option>
@@ -35,21 +39,32 @@
 
     {% if search or selected_type %}
     <a class="button button-secondary" href="{{ url_for('items') }}">
-        Clear
+        Reset
     </a>
     {% endif %}
 </form>
 
 {% if items %}
-<section class="card-list">
+<section class="card-list collection-list">
     {% for item in items %}
-    <article class="item-card">
+    <article class="item-card collection-card">
+        <div class="item-art item-art-{{item['itemType']|lower|replace(' ','-')}}" aria-hidden="true">
+            {% if item["itemType"] in ["Print Book", "Online Book"]%}Book
+            {% elif item["itemType"]=="Magazine"%}MAG
+            {% elif item["itemType"]=="Scientific Journal"%}JRN
+            {% elif item["itemType"]=="Record"%}LP
+            {% elif item["itemType"]=="Laptop"%}PC
+            {% elif item["itemType"]=="Charger"%}USB
+            {% elif item["itemType"]=="Marker"%}MRK
+            {% elif item["itemType"]=="Eraser"%}ERS
+            {% else%}ITEM{% endif %}
+        </div>
         <div class="item-card-main">
             <div class="item-card-topline">
                 <span class="badge">{{ item["itemType"] }}</span>
 
                 {% if item["itemType"] == "Online Book" %}
-                <span class="status status-available">Online</span>
+                <span class="status status-available">Online access</span>
                 {% elif item["availableCopies"] > 0 %}
                 <span class="status status-available">
                     {{ item["availableCopies"] }} available
@@ -60,7 +75,7 @@
             </div>
 
             <h2>{{ item["itemTitle"] }}</h2>
-            <p class="muted">{{ item["author"] or "Author not listed" }}</p>
+            <p class="item-author">{{ item["author"] or "Author not listed" }}</p>
 
             <dl class="metadata">
                 {% if item["publisher"] %}
@@ -114,11 +129,11 @@
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
 
                 <button class="button button-primary" type="submit">
-                    Borrow available copy
+                    Borrow a copy
                 </button>
             </form>
             {% else %}
-            <span class="muted">No copy available to borrow.</span>
+            <span class="availability-note">No copy available to borrow.</span>
             {% endif %}
         </div>
     </article>
@@ -128,6 +143,9 @@
 <div class="empty-state">
     <h2>No items found</h2>
     <p>Try a different title, author, ISBN or item type.</p>
+    {% if serach or selected_type %}
+    <a class="button button-secondary" href="{{ url_for('items')}}">Clear Search</a>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}

@@ -3,22 +3,31 @@
 {% block title %}Home | Not Google Library{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div>
-        <span class="eyebrow">Your library</span>
+<section class="hero home-hero">
+    <div class="hero-copy">
+        <span class="eyebrow">Your library dashboard</span>
         <h1>Hello, {{ person["firstName"] }}.</h1>
 
         <p>
-            Search the collection, manage your loans and discover events happening at the library.
+            Find something to read, keep track of what you borrowed, or see what is happening at the library 
         </p>
+        <form class="hero-search" method="get" action="{{ url_for('items')}}">
+            <label class="sr-only" for="home-q">Search the library collection</label>
+            <input id="home-q" name="q" type="search" placeholder="Search title, author or ISBN">
+            <button class="button button-accent" type="submit">Search collection</button>
+        </form>
+       
+    </div>
+     <div class="hero-note" aria-label="Quick library tip">
+            <span>Quick Start</span>
+            <strong>Search first, then borrow an available physical copy</strong>
+            <a href="{{ url_for('items')}}">Browse Everything &rarr;</a>
     </div>
 
-    <a class="button button-primary" href="{{ url_for('items') }}">
-        Find an item
-    </a>
+    
 </section>
 
-<section class="stat-grid">
+<section class="stat-grid member-stat-grid" aria-label="Account summary">
     <article class="stat-card">
         <span>Membership</span>
 
@@ -34,13 +43,13 @@
     <article class="stat-card">
         <span>Active loans</span>
         <strong>{{ active_loans }}</strong>
-        <a href="{{ url_for('loans') }}">View loans</a>
+        <a href="{{ url_for('loans') }}">Review borrowing &rarr;</a>
     </article>
 
     <article class="stat-card">
         <span>Unpaid fines</span>
         <strong>${{ "%.2f"|format(unpaid_fines) }}</strong>
-        <a href="{{ url_for('loans') }}">View details</a>
+        <a href="{{ url_for('loans') }}">View details &rarr;</a>
     </article>
 </section>
 
@@ -50,37 +59,53 @@
             <span class="eyebrow">Library services</span>
             <h2>What would you like to do?</h2>
         </div>
+        <p class="scetion-kicker">Everything here connects directly to the databse deatures in this project</p>
     </div>
 
-    <div class="action-grid">
-        <a class="action-card" href="{{ url_for('items') }}">
+    <div class="action-grid service-grid">
+        <a class="action-card action-card-featured" href="{{ url_for('items') }}">
             <span class="action-number">01</span>
+            <div>
             <h3>Find and borrow</h3>
             <p>Search books, magazines, equipment and online resources.</p>
+            </div>
+            <span class="action-arrow" aria-hidden="true">&rarr;</span>
         </a>
 
         <a class="action-card" href="{{ url_for('events') }}">
             <span class="action-number">02</span>
+            <div>
             <h3>Explore events</h3>
             <p>Find events, register to attend or apply as volunteer.</p>
+            </div>
+            <span class="action-arrow" aria-hidden="true">&rarr;</span>
         </a>
 
         <a class="action-card" href="{{ url_for('donate') }}">
             <span class="action-number">03</span>
+            <div>
             <h3>Donate materials</h3>
             <p>Submit books and other useful materials for review.</p>
+            </div>
+            <span class="action-arrow" aria-hidden="true">&rarr;</span>
         </a>
 
         <a class="action-card" href="{{ url_for('acquisitionRequest') }}">
             <span class="action-number">04</span>
+               <div>
             <h3>Request an item</h3>
             <p>Suggest new item that the library should acquire.</p>
+               </div>
+            <span class="action-arrow" aria-hidden="true">&rarr;</span>
         </a>
 
         <a class="action-card" href="{{ url_for('helpRequest') }}">
             <span class="action-number">05</span>
+               <div>
             <h3>Ask a librarian</h3>
             <p>Send question and follow the response from library staff.</p>
+               </div>
+               <span class="action-arrow" aria-hidden="true">&rarr;</span>
         </a>
     </div>
 </section>

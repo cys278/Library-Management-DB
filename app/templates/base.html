@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#244a3a">
 
     <title>{% block title %}Not Google Library{% endblock %}</title>
 
@@ -11,12 +12,15 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">Skip to connect</a>
     <header class="site-header">
         <div class="header-inner">
-            <a class="brand" href="{{ url_for('index') }}">
-                <span class="brand-mark">NGL</span>
+            <a class="brand" href="{{ url_for('index') }}" aria-label="Not Google Library home">
+                <span class="brand-mark" aria-hidden="true">
+                    <img src="{{url_for('static',filename='book-logo.svg' alt="")}}">
+                </span>
 
-                <span>
+                <span class="brand-copy">
                     <strong>Not Google Library</strong>
                     <small>Read. Learn. Connect.</small>
                 </span>
@@ -25,22 +29,31 @@
             <nav class="main-nav" aria-label="Main navigation">
                 {% if g.account %}
                 {% if g.account["accountRole"] == "User" %}
-                <a href="{{ url_for('home') }}">Home</a>
-                <a href="{{ url_for('items') }}">Find items</a>
-                <a href="{{ url_for('loans') }}">My loans</a>
-                <a href="{{ url_for('events') }}">Events</a>
-                <a href="{{ url_for('donate') }}">Donate</a>
-                <a href="{{ url_for('acquisitionRequest') }}">
+                <a class="{% if request.endpoint=='home' %}is-active{% endif %}" href="{{ url_for('home') }}">Home</a>
+                <a class="{% if request.endpoint in ['items','borrowItem'] %}is-active{% endif %}" href="{{ url_for('items') }}">Collection</a>
+                <a class="{% if request.endpoint in ['loans','returnItem'] %}is-active{% endif %}" href="{{ url_for('loans') }}">My loans</a>
+                <a class="{% if request.endpoint in ['events','registerEvent','volunteerEvent'] %}is-active{% endif %}" href="{{ url_for('events') }}">Events</a>
+                <a class="{% if request.endpoint=='donate' %}is-active{% endif %}" href="{{ url_for('donate') }}">Donate</a>
+                <a class="{% if request.endpoint =='acquisitionRequest' %}is-active{% endif %}" href="{{ url_for('acquisitionRequest') }}">
                     Request an item
                 </a>
-                <a href="{{ url_for('helpRequest') }}">Ask for help</a>
+                <a class="{% if request.endpoint=='helpRequest' %}is-active{% endif %}" href="{{ url_for('helpRequest') }}">Ask for help</a>
                 {% else %}
-                <a href="{{ url_for('employee_Dashboard') }}">
+                <a class="{% if request.endpoint=='employee_Dashboard' %}is-active{% endif %}" href="{{ url_for('employee_Dashboard') }}">
                     Dashboard
                 </a>
-                <a href="{{ url_for('items') }}">Collection</a>
-                <a href="{{ url_for('events') }}">Events</a>
+                 <a class="{% if request.endpoint=='managementPage' %}is-active{% endif %}" href="{{ url_for('managementPage') }}">
+               Manage
+                </a>
+                
+                <a class="{% if request.endpoint=='items' %}is-active{% endif %}" href="{{ url_for('items') }}">Collection</a>
+                <a class="{% if request.endpoint in ['events','newEvent'] %}is-active{% endif %}" href="{{ url_for('events') }}">Events</a>
                 {% endif %}
+
+                <span class="account-chip" title="Signed-in account role">
+                   {{g.account["accountRole"]}}
+                </span>
+                
 
                 <form class="logout-form" method="post" action="{{ url_for('logout') }}">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
@@ -49,7 +62,7 @@
                     </button>
                 </form>
                 {% else %}
-                <a href="{{ url_for('login') }}">Log in</a>
+                <a class="{% if request.endpoint=='login' %}is-active{% endif %}" href="{{ url_for('login') }}">Log in</a>
                 <a class="nav-link-primary" href="{{ url_for('createAccount') }}">
                     Create account
                 </a>
@@ -58,12 +71,13 @@
         </div>
     </header>
 
-    <main class="page-shell">
+    <main id="main-content" class="page-shell">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <section class="flash-list" aria-label="Notifications">
             {% for category, message in messages %}
             <div class="flash flash-{{ category }}" role="alert">
+                <span class="flash-dot" aria-hidden="true"></span>
                 {{ message }}
             </div>
             {% endfor %}
@@ -75,7 +89,13 @@
     </main>
 
     <footer class="site-footer">
-        <p>Not Google Library | Lower Mainland, British Columbia</p>
+       <div class="footer-inner">
+        <div>
+            <strong>Not Google Library</strong>
+            <span>Lower Mainland, British Columbia</span>
+        </div>
+        <span>CMPT 354 Library Management Database</span>
+       </div>
     </footer>
 
     {% block scripts %}{% endblock %}

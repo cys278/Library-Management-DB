@@ -9,11 +9,17 @@
         <h1>Library events</h1>
         <p>Find events to attend or opportunities to volunteer.</p>
     </div>
+    {% if events %}
+    <div class="result-count" aria-label="Event result count">
+        <strong>{{ events|length}}</strong>
+        <span>event {% if events|length !=1%}s{%endif%}</span>
+    </div>
+    {% endif %}
 </section>
 
-<form class="search-bar" method="get" action="{{ url_for('events') }}">
+<form class="search-bar collection-search" method="get" action="{{ url_for('events') }}">
     <div class="field search-field">
-        <label class="sr-only" for="q">Search events</label>
+        <label for="q">Search events</label>
         <input id="q" name="q" type="search" value="{{ search }}" placeholder="Search event name, type or description">
     </div>
 
@@ -21,22 +27,22 @@
 
     {% if search %}
     <a class="button button-secondary" href="{{ url_for('events') }}">
-        Clear
+        Reset
     </a>
     {% endif %}
 </form>
 
 {% if events %}
-<section class="event-grid">
+<section class="event-grid modern-event grid">
     {% for event in events %}
-    <article class="event-card">
+    <article class="event-card modern-event-card">
         <div class="event-card-header">
-            <div>
+            <div class="event-badges">
                 <span class="badge">{{ event["eventType"] }}</span>
 
                 {% if event["recommended"] %}
                 <span class="badge badge-highlight">
-                    Recommended
+                    Recommended for you
                 </span>
                 {% endif %}
             </div>
@@ -46,15 +52,17 @@
             </span>
         </div>
 
-        <h2>{{ event["eventName"] }}</h2>
-        <p>{{ event["description"] or "No description provided." }}</p>
-
-        <dl class="metadata event-metadata">
-            <div>
-                <dt>Date</dt>
-                <dd>{{ event["eventDate"] }}</dd>
+        <div class="event-title-row">
+            <div class="event-date-tile">
+                <span>Date</span>
+                <strong>{{ event["eventDate"]}}</strong>
             </div>
-
+            <div >
+                <h2>{{ event["eventName"]}}</h2>
+                <p>{{ event["description"] or "No description provided"}}</p>
+            </div>
+        </div>
+        <dl class="metadata event-metadata">
             <div>
                 <dt>Time</dt>
                 <dd>
@@ -68,26 +76,32 @@
             </div>
 
             <div>
-                <dt>Registration</dt>
+                <dt>Registered</dt>
                 <dd>
                     {{ event["registrationCount"] }}
                     / {{ event["eventCapacity"] }}
                 </dd>
             </div>
+            <div>
+                <dt>Space Left</dt>
+                <dd>
+                    {{ event["eventCapacity"] - event["registrationCount"] }}
+                </dd>
+            </div>
         </dl>
+        <div class="capacity-track" aria-label="Registration capacity">
+            <span style="width:{{([100,(event['registrationCount']*100/event['eventCapacity'])]|min) if event['eventCapacity']else 0}}%"></span>
+        </div>
 
         {% if event["audiences"] %}
         <p class="audience-line">
-            <strong>For:</strong> {{ event["audiences"] }}
+            <strong>Best For:</strong> {{ event["audiences"] }}
         </p>
         {% endif %}
 
         {% if g.account["accountRole"] == "User" %}
         <div class="event-actions">
-            {% if
-            event["eventStatus"] == "Open"
-            and event["registrationCount"] < event["eventCapacity"] %} <form method="post"
-                action="{{ url_for('registerEvent', event_id=event['eventID']) }}">
+            {% if event["eventStatus"] == "Open" and event["registrationCount"] < event["eventCapacity"] %} <form method="post" action="{{ url_for('registerEvent', event_id=event['eventID']) }}">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
 
                 <button class="button button-primary" type="submit">
@@ -122,7 +136,7 @@
                 {% endif %}
 
                 {% if event["eventStatus"] != "Open" %}
-                <span class="muted">
+                <span class="availability-note">
                     Registration and volunteering are not open.
                 </span>
                 {% endif %}
@@ -133,6 +147,7 @@
 </section>
 {% else %}
 <div class="empty-state">
+    <span class="empty-symbol" aria-hidden="true">&#9719;</span>
     <h2>No events found</h2>
     <p>Try another search or check again later.</p>
 </div>
