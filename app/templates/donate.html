@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Donate items | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Support the collection</span>
+        <h1>Donate items</h1>
+
+        <p>
+            Submit one or more items. Library employees will review each item before accepting the donation.
+        </p>
+    </div>
+</section>
+
+<form class="form-card form-card-wide" method="post" action="{{ url_for('donate') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+    <div class="section-heading compact">
+        <div>
+            <h2>Items in this donation</h2>
+            <p>Add separate row for each different item.</p>
+        </div>
+
+        <button id="add-donation-item" class="button button-secondary" type="button">
+            Add another item
+        </button>
+    </div>
+
+    <div id="donation-items" class="repeat-list">
+        <fieldset class="repeat-card donation-row">
+            <legend>Donated item</legend>
+
+            <div class="form-grid">
+                <div class="field field-span-2">
+                    <label>Title</label>
+                    <input name="title" type="text" required>
+                </div>
+
+                <div class="field">
+                    <label>Item type</label>
+                    <input name="item_type" type="text" list="donation-item-types" placeholder="Print Book" required>
+                </div>
+
+                <div class="field">
+                    <label>Author or creator</label>
+                    <input name="author" type="text">
+                </div>
+
+                <div class="field">
+                    <label>Quantity</label>
+                    <input name="quantity" type="number" min="1" value="1" required>
+                </div>
+
+                <div class="field">
+                    <label>Condition</label>
+                    <select name="condition" required>
+                        <option value="New">New</option>
+                        <option value="Good" selected>Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Damaged">Damaged</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="button-link danger-link remove-donation-item" type="button">
+                Remove item
+            </button>
+        </fieldset>
+    </div>
+
+    <datalist id="donation-item-types">
+        {% for item_type in library_item_types %}
+        <option value="{{ item_type }}"></option>
+        {% endfor %}
+        <option value="Map"></option>
+        <option value="Technology Kit"></option>
+        <option value="Gaming Equipment"></option>
+        <option value="Other"></option>
+    </datalist>
+
+    <div class="form-actions">
+        <button class="button button-primary" type="submit">
+            Submit donation
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const donationList = document.getElementById("donation-items");
+    const addDonationButton = document.getElementById("add-donation-item");
+
+    function updateDonationRows() {
+        const rows = donationList.querySelectorAll(".donation-row");
+
+        rows.forEach((row, index) => {
+            row.querySelector("legend").textContent =
+                `Donated item ${index + 1}`;
+
+            row.querySelector(".remove-donation-item").hidden =
+                rows.length === 1;
+        });
+    }
+
+    addDonationButton.addEventListener("click", () => {
+        const firstRow = donationList.querySelector(".donation-row");
+        const newRow = firstRow.cloneNode(true);
+
+        newRow.querySelectorAll("input").forEach((input) => {
+            input.value = input.name === "quantity" ? "1" : "";
+        });
+
+        newRow.querySelector('select[name="condition"]').value = "Good";
+        donationList.appendChild(newRow);
+        updateDonationRows();
+    });
+
+    donationList.addEventListener("click", (event) => {
+        if (!event.target.classList.contains("remove-donation-item")) {
+            return;
+        }
+
+        event.target.closest(".donation-row").remove();
+        updateDonationRows();
+    });
+
+    updateDonationRows();
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Log in | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-intro">
+        <span class="eyebrow">Library account</span>
+        <h1>Welcome back</h1>
+
+        <p>
+            Log in to borrow items, manage loans, register for events, volunteer and contact a librarian.
+        </p>
+    </div>
+
+    <div class="form-card">
+        <h2>Log in</h2>
+
+        <form method="post" action="{{ url_for('login') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+            <div class="field">
+                <label for="email">Email address</label>
+                <input id="email" name="email" type="email" autocomplete="email" required autofocus>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+
+            <button class="button button-primary button-full" type="submit">
+                Log in
+            </button>
+        </form>
+
+        <p class="form-footer">
+            Do not have an account?
+            <a href="{{ url_for('createAccount') }}">Create one</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

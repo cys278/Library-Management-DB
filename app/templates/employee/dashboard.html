@@ -1,0 +1,671 @@
+{% extends "base.html" %}
+
+{% block title %}Employee dashboard | Not Google Library{% endblock %}
+
+{% block content %}
+{% set position = g.employee["position"] %}
+
+<section class="hero employee-hero">
+    <div>
+        <span class="eyebrow">Employee workspace</span>
+        <h1>
+            {{ g.employee["firstName"] }}
+            {{ g.employee["lastName"] }}
+        </h1>
+
+        <p>
+            {{ position }} | Manage daily library activity and records.
+        </p>
+    </div>
+
+    {% if position in ["Event Coordinator", "Librarian", "Manager"] %}
+    <div class="button-row">
+        <a class="button button-primary" href="{{ url_for('newEvent') }}">Create event</a>
+        <a class="button button-secondary" href="{{url_for('managementPage') }}">Manage records</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="stat-grid">
+    <article class="stat-card">
+        <span>Active loans</span>
+        <strong>{{ active_loans|length }}</strong>
+    </article>
+
+    <article class="stat-card">
+        <span>Unpaid fines</span>
+        <strong>{{ unpaid_fines|length }}</strong>
+    </article>
+
+    <article class="stat-card">
+        <span>Pending donations</span>
+        <strong>
+            {{ donations|selectattr("donationStatus", "equalto", "Pending")|list|length }}
+        </strong>
+    </article>
+
+    <article class="stat-card">
+        <span>Help requests</span>
+        <strong>
+            {{ help_requests|rejectattr("requestStatus", "equalto", "Resolved")|list|length }}
+        </strong>
+    </article>
+</section>
+
+<nav class="dashboard-nav" aria-label="Dashboard sections">
+    <a href="#loans">Loans</a>
+    <a href="#fines">Fines</a>
+    <a href="#donations">Donations</a>
+    <a href="#acquisitions">Acquisitions</a>
+    <a href="#events">Events</a>
+    <a href="#copies">Copies</a>
+    <a href="#help">Help requests</a>
+</nav>
+
+<section id="loans" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Circulation</span>
+            <h2>Active loans</h2>
+        </div>
+    </div>
+
+    {% if active_loans %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Item</th>
+                    <th>Barcode</th>
+                    <th>Borrowed</th>
+                    <th>Due</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for loan in active_loans %}
+                <tr>
+                    <td>{{ loan["memberName"] }}</td>
+
+                    <td>
+                        <strong>{{ loan["itemTitle"] }}</strong>
+                        <small>{{ loan["itemType"] }}</small>
+                    </td>
+
+                    <td>{{ loan["barcode"] }}</td>
+                    <td>{{ loan["borrowDateTime"] }}</td>
+                    <td>{{ loan["dueDateTime"] }}</td>
+
+                    <td>
+                        {% if position in ["Librarian", "Library Assistant", "Manager"] %}
+                        <form method="post" action="{{ url_for('employeeReturn', loan_id=loan['loanID']) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                            <button class="button button-small button-secondary" type="submit">
+                                Return item
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="muted">View only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>There are no active loans.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="fines" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Payments</span>
+            <h2>Unpaid fines</h2>
+        </div>
+    </div>
+
+    {% if unpaid_fines %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Item</th>
+                    <th>Issued</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for fine in unpaid_fines %}
+                <tr>
+                    <td>{{ fine["memberName"] }}</td>
+                    <td>{{ fine["itemTitle"] }}</td>
+                    <td>{{ fine["issueDate"] }}</td>
+                    <td>${{ "%.2f"|format(fine["amount"]) }}</td>
+
+                    <td>
+                        {% if position in ["Librarian", "Manager"] %}
+                        <div class="button-row">
+                            <form method="post"
+                                action="{{ url_for('updateFine', fine_id=fine['fineID'], action='paid') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <button class="button button-small button-primary" type="submit">
+                                    Mark paid
+                                </button>
+                            </form>
+
+                            <form method="post"
+                                action="{{ url_for('updateFine', fine_id=fine['fineID'], action='waived') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <button class="button button-small button-secondary" type="submit">
+                                    Waive
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span class="muted">View only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>There are no unpaid fines.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="donations" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Community donations</span>
+            <h2>Donations</h2>
+        </div>
+    </div>
+
+    {% if donations %}
+    <div class="stack">
+        {% for donation in donations %}
+        <article class="management-card">
+            <div class="management-card-header">
+                <div>
+                    <h3>Donation #{{ donation["donationID"] }}</h3>
+                    <p>
+                        {{ donation["donorName"] }} |
+                        {{ donation["donationDate"] }}
+                    </p>
+                </div>
+
+                <span class="status status-{{ donation['donationStatus']|lower }}">
+                    {{ donation["donationStatus"] }}
+                </span>
+            </div>
+
+            <div class="nested-list">
+                {% for item in donated_by_donation.get(donation["donationID"], []) %}
+                <div class="nested-row">
+                    <div>
+                        <strong>{{ item["title"] }}</strong>
+                        <small>
+                            {{ item["itemType"] }} |
+                            {{ item["author"] or "No author" }} |
+                            Quantity {{ item["quantity"] }} |
+                            {{ item["itemCondition"] or "Condition not listed" }}
+                        </small>
+                    </div>
+
+                    <div class="row-actions">
+                        <span class="status status-{{ item['approvalStatus']|lower }}">
+                            {{ item["approvalStatus"] }}
+                        </span>
+
+                        {% if
+                        donation["donationStatus"] == "Pending"
+                        and position in ["Librarian", "Manager"]
+                        %}
+                        <form method="post"
+                            action="{{ url_for('reviewDonatedItem', item_id=item['donatedItemID'], status='approve') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button class="button button-small button-primary" type="submit">
+                                Approve
+                            </button>
+                        </form>
+
+                        <form method="post"
+                            action="{{ url_for('reviewDonatedItem', item_id=item['donatedItemID'], status='reject') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button class="button button-small button-danger" type="submit">
+                                Reject
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if
+                        donation["donationStatus"] == "Approved"
+                        and item["approvalStatus"] == "Approved"
+                        and position in ["Librarian", "Manager"]
+                        %}
+                        <a class="button button-small button-secondary"
+                            href="{{ url_for('collectionImport', source_type='donation', source_id=item['donatedItemID']) }}">
+                            Add to collection
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if
+            donation["donationStatus"] == "Pending"
+            and position in ["Librarian", "Manager"]
+            %}
+            <div class="button-row card-footer-actions">
+                <form method="post"
+                    action="{{ url_for('finalDonation', donation_id=donation['donationID'], status='Approved') }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                    <button class="button button-primary" type="submit">
+                        Approve donation
+                    </button>
+                </form>
+
+                <form method="post"
+                    action="{{ url_for('finalDonation', donation_id=donation['donationID'], status='Rejected') }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                    <button class="button button-danger" type="submit">
+                        Reject donation
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>No donations are available.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="acquisitions" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Collection requests</span>
+            <h2>Future acquisitions</h2>
+        </div>
+    </div>
+
+    {% if acquisitions %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Requested item</th>
+                    <th>Requester</th>
+                    <th>Quantity</th>
+                    <th>Estimated cost</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for acquisition in acquisitions %}
+                <tr>
+                    <td>
+                        <strong>{{ acquisition["title"] }}</strong>
+                        <small>
+                            {{ acquisition["itemType"] }} |
+                            {{ acquisition["author"] or "No author" }}
+                        </small>
+                    </td>
+
+                    <td>
+                        {{ acquisition["requesterName"] }}
+                        <small>{{ acquisition["requestDate"] }}</small>
+                    </td>
+
+                    <td>{{ acquisition["proposedQuantity"] }}</td>
+
+                    <td>
+                        {% if acquisition["estimatedCost"] is not none %}
+                        ${{ "%.2f"|format(acquisition["estimatedCost"]) }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="status status-{{ acquisition['requestStatus']|lower|replace(' ', '-') }}">
+                            {{ acquisition["requestStatus"] }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if position in ["Librarian", "Manager"] %}
+                        <div class="button-row">
+                            {% if acquisition["requestStatus"] != "Acquired" %}
+                            <form method="post"
+                                action="{{ url_for('reviewAcquisition', acquisition_id=acquisition['acquisitionID'], status='review') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <button class="button button-small button-secondary" type="submit">
+                                    Review
+                                </button>
+                            </form>
+
+                            <form method="post"
+                                action="{{ url_for('reviewAcquisition', acquisition_id=acquisition['acquisitionID'], status='approve') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <button class="button button-small button-primary" type="submit">
+                                    Approve
+                                </button>
+                            </form>
+
+                            <form method="post"
+                                action="{{ url_for('reviewAcquisition', acquisition_id=acquisition['acquisitionID'], status='reject') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <button class="button button-small button-danger" type="submit">
+                                    Reject
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if acquisition["requestStatus"] == "Approved" %}
+                            <a class="button button-small button-secondary"
+                                href="{{ url_for('collectionImport', source_type='acquisition', source_id=acquisition['acquisitionID']) }}">
+                                Add to collection
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <span class="muted">View only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>No acquisition requests are available.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="events" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Programming</span>
+            <h2>Events</h2>
+        </div>
+
+        {% if position in ["Event Coordinator", "Librarian", "Manager"] %}
+        <a class="button button-primary" href="{{ url_for('newEvent') }}">
+            Create event
+        </a>
+        {% endif %}
+    </div>
+
+    {% if events %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Date and time</th>
+                    <th>Room</th>
+                    <th>Capacity</th>
+                    <th>Status</th>
+                    <th>Change status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td>
+                        <strong>{{ event["eventName"] }}</strong>
+                        <small>{{ event["eventType"] }}</small>
+                    </td>
+
+                    <td>
+                        {{ event["eventDate"] }}
+                        <small>
+                            {{ event["startTime"] }}-{{ event["endTime"] }}
+                        </small>
+                    </td>
+
+                    <td>{{ event["roomName"] }}</td>
+                    <td>{{ event["eventCapacity"] }}</td>
+
+                    <td>
+                        <span class="status status-{{ event['eventStatus']|lower }}">
+                            {{ event["eventStatus"] }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if position in ["Event Coordinator", "Librarian", "Manager"] %}
+                        <form class="inline-form" method="post"
+                            action="{{ url_for('changeEventStatus', event_id=event['eventID']) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                            <select name="status" required>
+                                <option value="Open" {% if event["eventStatus"]=="Open" %}selected{% endif %}>
+                                    Open
+                                </option>
+
+                                <option value="Closed" {% if event["eventStatus"]=="Closed" %}selected{% endif %}>
+                                    Closed
+                                </option>
+
+                                <option value="Cancelled" {% if event["eventStatus"]=="Cancelled" %}selected{% endif %}>
+                                    Cancelled
+                                </option>
+                            </select>
+
+                            <button class="button button-small button-secondary" type="submit">
+                                Update
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="muted">View only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>No events are available.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="copies" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Physical collection</span>
+            <h2>Borrowable copies</h2>
+        </div>
+    </div>
+
+    {% if copies %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Barcode</th>
+                    <th>Shelf</th>
+                    <th>Condition</th>
+                    <th>Status</th>
+                    <th>Update</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for copy in copies %}
+                <tr>
+                    <td>
+                        <strong>{{ copy["itemTitle"] }}</strong>
+                        <small>{{ copy["itemType"] }}</small>
+                    </td>
+
+                    <td>{{ copy["barcode"] }}</td>
+                    <td>{{ copy["shelfLocation"] or "Not assigned" }}</td>
+                    <td>{{ copy["itemCondition"] }}</td>
+
+                    <td>
+                        <span class="status status-{{ copy['itemStatus']|lower }}">
+                            {{ copy["itemStatus"] }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if
+                        position in ["Technician", "Librarian", "Manager"]
+                        and copy["itemStatus"] != "Borrowed"
+                        %}
+                        <form class="inline-form" method="post"
+                            action="{{ url_for('updateCopy', copy_id=copy['borrowableItemID']) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                            <select name="condition" required>
+                                {% for condition in ["New", "Good", "Fair", "Damaged"] %}
+                                <option value="{{ condition }}" {% if copy["itemCondition"]==condition %}selected{%
+                                    endif %}>
+                                    {{ condition }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <select name="status" required>
+                                {% for copy_status in ["Available", "Lost", "Maintenance"] %}
+                                <option value="{{ copy_status }}" {% if copy["itemStatus"]==copy_status %}selected{%
+                                    endif %}>
+                                    {{ copy_status }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <button class="button button-small button-secondary" type="submit">
+                                Save
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="muted">
+                            {% if copy["itemStatus"] == "Borrowed" %}
+                            Controlled by active loan
+                            {% else %}
+                            View only
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>No physical copies are available.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="help" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Patron support</span>
+            <h2>Help requests</h2>
+        </div>
+    </div>
+
+    {% if help_requests %}
+    <div class="stack">
+        {% for help in help_requests %}
+        <article class="management-card">
+            <div class="management-card-header">
+                <div>
+                    <h3>{{ help["issue"] }}</h3>
+                    <p>
+                        {{ help["personName"] }} |
+                        {{ help["createdAt"] }}
+                    </p>
+                </div>
+
+                <span class="status status-{{ help['requestStatus']|lower|replace(' ', '-') }}">
+                    {{ help["requestStatus"] }}
+                </span>
+            </div>
+
+            <p>{{ help["messages"] }}</p>
+
+            {% if help["response"] %}
+            <div class="response-box">
+                <strong>Current response</strong>
+                <p>{{ help["response"] }}</p>
+            </div>
+            {% endif %}
+
+            {% if position in ["Librarian", "Manager"] %}
+            <form class="reply-form" method="post" action="{{ url_for('answerHelp', help_id=help['helpRequestID']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                <div class="field field-grow">
+                    <label for="response-{{ help['helpRequestID'] }}">
+                        Response
+                    </label>
+
+                    <textarea id="response-{{ help['helpRequestID'] }}" name="response" rows="3"
+                        required>{{ help["response"] or "" }}</textarea>
+                </div>
+
+                <div class="field">
+                    <label for="help-status-{{ help['helpRequestID'] }}">
+                        Status
+                    </label>
+
+                    <select id="help-status-{{ help['helpRequestID'] }}" name="status" required>
+                        <option value="In Progress" {% if help["requestStatus"]=="In Progress" %}selected{% endif %}>
+                            In Progress
+                        </option>
+
+                        <option value="Resolved" {% if help["requestStatus"]=="Resolved" %}selected{% endif %}>
+                            Resolved
+                        </option>
+                    </select>
+                </div>
+
+                <button class="button button-primary" type="submit">
+                    Save response
+                </button>
+            </form>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>No help requests are available.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

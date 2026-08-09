@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Find items | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Library collection</span>
+        <h1>Find an item</h1>
+        <p>Search by title, author or ISBN.</p>
+    </div>
+</section>
+
+<form class="search-bar" method="get" action="{{ url_for('items') }}">
+    <div class="field search-field">
+        <label class="sr-only" for="q">Search collection</label>
+        <input id="q" name="q" type="search" value="{{ search }}" placeholder="Title, author or ISBN">
+    </div>
+
+    <div class="field">
+        <label class="sr-only" for="type">Item type</label>
+
+        <select id="type" name="type">
+            <option value="">All item types</option>
+
+            {% for item_type in library_item_types %}
+            <option value="{{ item_type }}" {% if selected_type==item_type %}selected{% endif %}>
+                {{ item_type }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button class="button button-primary" type="submit">Search</button>
+
+    {% if search or selected_type %}
+    <a class="button button-secondary" href="{{ url_for('items') }}">
+        Clear
+    </a>
+    {% endif %}
+</form>
+
+{% if items %}
+<section class="card-list">
+    {% for item in items %}
+    <article class="item-card">
+        <div class="item-card-main">
+            <div class="item-card-topline">
+                <span class="badge">{{ item["itemType"] }}</span>
+
+                {% if item["itemType"] == "Online Book" %}
+                <span class="status status-available">Online</span>
+                {% elif item["availableCopies"] > 0 %}
+                <span class="status status-available">
+                    {{ item["availableCopies"] }} available
+                </span>
+                {% else %}
+                <span class="status status-closed">Unavailable</span>
+                {% endif %}
+            </div>
+
+            <h2>{{ item["itemTitle"] }}</h2>
+            <p class="muted">{{ item["author"] or "Author not listed" }}</p>
+
+            <dl class="metadata">
+                {% if item["publisher"] %}
+                <div>
+                    <dt>Publisher</dt>
+                    <dd>{{ item["publisher"] }}</dd>
+                </div>
+                {% endif %}
+
+                {% if item["publicationYear"] %}
+                <div>
+                    <dt>Year</dt>
+                    <dd>{{ item["publicationYear"] }}</dd>
+                </div>
+                {% endif %}
+
+                {% if item["language"] %}
+                <div>
+                    <dt>Language</dt>
+                    <dd>{{ item["language"] }}</dd>
+                </div>
+                {% endif %}
+
+                {% if item["ISBN"] %}
+                <div>
+                    <dt>ISBN</dt>
+                    <dd>{{ item["ISBN"] }}</dd>
+                </div>
+                {% endif %}
+
+                {% if item["itemType"] != "Online Book" %}
+                <div>
+                    <dt>Total copies</dt>
+                    <dd>{{ item["totalCopies"] }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+
+        <div class="item-card-actions">
+            {% if item["itemType"] == "Online Book" %}
+            <a class="button button-primary" href="{{ item['onlineAccessURL'] }}" target="_blank"
+                rel="noopener noreferrer">
+                Open resource
+            </a>
+            {% elif
+            g.account["accountRole"] == "User"
+            and item["availableCopies"] > 0
+            %}
+            <form method="post" action="{{ url_for('borrowItem', item_id=item['itemID']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                <button class="button button-primary" type="submit">
+                    Borrow available copy
+                </button>
+            </form>
+            {% else %}
+            <span class="muted">No copy available to borrow.</span>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="empty-state">
+    <h2>No items found</h2>
+    <p>Try a different title, author, ISBN or item type.</p>
+</div>
+{% endif %}
+{% endblock %}

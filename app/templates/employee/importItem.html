@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Add to collection | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Collection processing</span>
+        <h1>Add approved item to the collection</h1>
+
+        <p>
+            Complete the catalog information before creating the LibraryItem record.
+        </p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('employee_Dashboard') }}">
+        Back to dashboard
+    </a>
+</section>
+
+<section class="source-summary">
+    <div>
+        <span>Source</span>
+        <strong>{{ source_type|title }} #{{ source["sourceID"] }}</strong>
+    </div>
+
+    <div>
+        <span>Title</span>
+        <strong>{{ source["title"] }}</strong>
+    </div>
+
+    <div>
+        <span>Author</span>
+        <strong>{{ source["author"] or "Not provided" }}</strong>
+    </div>
+
+    <div>
+        <span>Quantity</span>
+        <strong>{{ quantity }}</strong>
+    </div>
+</section>
+
+<form class="form-card form-card-wide" method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+    <div class="form-grid">
+        <div class="field">
+            <label for="item_type">Catalog item type</label>
+
+            <select id="item_type" name="item_type" required>
+                <option value="">Select item type</option>
+
+                {% for item_type in library_item_types %}
+                <option value="{{ item_type }}" {% if source["itemType"]==item_type %}selected{% endif %}>
+                    {{ item_type }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="publisher">Publisher</label>
+            <input id="publisher" name="publisher" type="text">
+        </div>
+
+        <div class="field">
+            <label for="publication_year">Publication year</label>
+            <input id="publication_year" name="publication_year" type="number" min="1">
+        </div>
+
+        <div class="field">
+            <label for="language">Language</label>
+            <input id="language" name="language" type="text" placeholder="English">
+        </div>
+
+        <div class="field">
+            <label for="isbn">ISBN</label>
+            <input id="isbn" name="isbn" type="text">
+        </div>
+
+        <div class="field online-field">
+            <label for="online_url">Online access URL</label>
+            <input id="online_url" name="online_url" type="url" placeholder="https://">
+        </div>
+
+        <div class="field physical-field">
+            <label for="shelf_location">Shelf location</label>
+            <input id="shelf_location" name="shelf_location" type="text" placeholder="A2-14">
+        </div>
+
+        <div class="field physical-field">
+            <label for="condition">Copy condition</label>
+
+            <select id="condition" name="condition">
+                <option value="New">New</option>
+                <option value="Good" {% if not source["itemCondition"] or source["itemCondition"]=="Good" %} selected {%
+                    endif %}>
+                    Good
+                </option>
+                <option value="Fair" {% if source["itemCondition"]=="Fair" %}selected{% endif %}>
+                    Fair
+                </option>
+                <option value="Damaged" {% if source["itemCondition"]=="Damaged" %}selected{% endif %}>
+                    Damaged
+                </option>
+            </select>
+        </div>
+
+        <div class="field field-span-2 physical-field">
+            <label for="barcodes">Barcodes</label>
+
+            <textarea id="barcodes" name="barcodes" rows="{{ quantity if quantity < 10 else 10 }}"
+                placeholder="Enter exactly {{ quantity }} barcodes, one per line"></textarea>
+
+            <small>
+                Physical items require exactly {{ quantity }} unique barcodes.
+                Online books do not use barcodes.
+            </small>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button class="button button-primary" type="submit">
+            Create LibraryItem
+        </button>
+
+        <a class="button button-secondary" href="{{ url_for('employee_Dashboard') }}">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const itemType = document.getElementById("item_type");
+    const onlineFields = document.querySelectorAll(".online-field");
+    const physicalFields = document.querySelectorAll(".physical-field");
+    const onlineUrl = document.getElementById("online_url");
+    const barcodes = document.getElementById("barcodes");
+
+    function updateImportFields() {
+        const isOnline = itemType.value === "Online Book";
+
+        onlineFields.forEach((field) => {
+            field.hidden = !isOnline;
+        });
+
+        physicalFields.forEach((field) => {
+            field.hidden = isOnline;
+        });
+
+        onlineUrl.required = isOnline;
+        barcodes.required = !isOnline;
+    }
+
+    itemType.addEventListener("change", updateImportFields);
+    updateImportFields();
+</script>
+{% endblock %}

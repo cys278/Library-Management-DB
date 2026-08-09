@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}Manage records | Not Google Library{% endblock %}
+
+{% block content %}
+{% set position = g.employee["position"] %}
+
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Employee tools</span>
+        <h1>Manage library records</h1>
+        <p>
+            Manage memberships, volunteers, registrations and event recommendations.
+        </p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('employee_Dashboard') }}">
+        Back to dashboard
+    </a>
+</section>
+
+<nav class="dashboard-nav" aria-label="Management sections">
+    {% if position in ["Librarian", "Manager"] %}
+    <a href="#new-members">New memberships</a>
+    <a href="#members">Member status</a>
+    {% endif %}
+
+    <a href="#volunteers">Volunteers</a>
+    <a href="#registrations">Registrations</a>
+    <a href="#event-details">Event audiences and interests</a>
+</nav>
+
+{% if position in ["Librarian", "Manager"] %}
+<section id="new-members" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Membership</span>
+            <h2>People waiting for membership</h2>
+
+            <p>
+                These people have user accounts but do not have Member
+                records.
+            </p>
+        </div>
+    </div>
+
+    {% if waiting_people %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Person ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Date of birth</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for person in waiting_people %}
+                <tr>
+                    <td>{{ person["personID"] }}</td>
+
+                    <td>
+                        {{ person["firstName"] }}
+                        {{ person["lastName"] }}
+                    </td>
+
+                    <td>{{ person["email"] }}</td>
+
+                    <td>
+                        {{ person["dateOfBirth"] or "Not provided" }}
+                    </td>
+
+                    <td>
+                        <form method="post" action="{{ url_for(
+                                'createMember',
+                                person_id=person['personID']
+                            ) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                            <button class="button button-small button-primary" type="submit">
+                                Create membership
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>No user accounts are waiting for membership.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="members" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Membership status</span>
+            <h2>Current members</h2>
+        </div>
+    </div>
+
+    {% if members %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Member ID</th>
+                    <th>Person</th>
+                    <th>Email</th>
+                    <th>Member since</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>{{ member["memberID"] }}</td>
+
+                    <td>
+                        {{ member["firstName"] }}
+                        {{ member["lastName"] }}
+                    </td>
+
+                    <td>{{ member["email"] }}</td>
+                    <td>{{ member["membershipDate"] }}</td>
+
+                    <td>
+                        <form class="inline-form" method="post" action="{{ url_for(
+                                'changeMembership',
+                                member_id=member['memberID']
+                            ) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                            <select name="status" required>
+                                {% for status in [
+                                "Active",
+                                "Inactive",
+                                "Suspended"
+                                ] %}
+                                <option value="{{ status }}" {% if member["membershipStatus"]==status %} selected {%
+                                    endif %}>
+                                    {{ status }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <button class="button button-small button-secondary" type="submit">
+                                Update
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<section id="volunteers" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Event help</span>
+            <h2>Volunteer applications</h2>
+        </div>
+    </div>
+
+    {% if volunteers %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Person</th>
+                    <th>Event</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Hours/action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for volunteer in volunteers %}
+                <tr>
+                    <td>{{ volunteer["personName"] }}</td>
+
+                    <td>
+                        <strong>{{ volunteer["eventName"] }}</strong>
+                        <small>{{ volunteer["eventDate"] }}</small>
+                    </td>
+
+                    <td>{{ volunteer["role"] }}</td>
+                    <td>{{ volunteer["status"] }}</td>
+
+                    <td>
+                        {% if volunteer["status"] in [
+                        "Pending",
+                        "Approved"
+                        ] %}
+                        <form class="inline-form" method="post" action="{{ url_for(
+                                'updateVolunteer',
+                                assignment_id=volunteer['assignmentID']
+                            ) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                            <select name="status" required>
+                                <option value="">Select action</option>
+
+                                {% if volunteer["status"] == "Pending" %}
+                                <option value="Approved">Approve</option>
+                                <option value="Rejected">Reject</option>
+                                {% endif %}
+
+                                {% if volunteer["status"] == "Approved" %}
+                                <option value="Completed">Complete</option>
+                                <option value="Rejected">Reject</option>
+                                {% endif %}
+                            </select>
+
+                            <input name="number_of_hours" type="number" min="0" step="0.25"
+                                value="{{ volunteer['numberOfHours'] }}" aria-label="Volunteer hours">
+
+                            <button class="button button-small button-secondary" type="submit">
+                                Save
+                            </button>
+                        </form>
+                        {% else %}
+                        <span>
+                            {{ volunteer["numberOfHours"] }} hours
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state small-empty">
+        <p>There are no volunteer applications.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section id="registrations" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Attendance</span>
+            <h2>Event registrations</h2>
+        </div>
+    </div>
+
+    {% if registrations %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Person</th>
+                    <th>Event</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for registration in registrations %}
+                <tr>
+                    <td>{{ registration["personName"] }}</td>
+
+                    <td>
+                        <strong>{{ registration["eventName"] }}</strong>
+                        <small>{{ registration["eventDate"] }}</small>
+                    </td>
+
+                    <td>{{ registration["registrationDate"] }}</td>
+                    <td>{{ registration["registrationStatus"] }}</td>
+
+                    <td>
+                        {% if registration["registrationStatus"]
+                        == "Registered" %}
+                        <div class="button-row">
+                            <form method="post" action="{{ url_for(
+                                    'updateRegistration',
+                                    registration_id=registration[
+                                        'registrationID'
+                                    ],
+                                    action='attended'
+                                ) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                                <button class="button button-small button-primary" type="submit">
+                                    Attended
+                                </button>
+                            </form>
+
+                            <form method="post" action="{{ url_for(
+                                    'updateRegistration',
+                                    registration_id=registration[
+                                        'registrationID'
+                                    ],
+                                    action='no-show'
+                                ) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                                <button class="button button-small button-secondary" type="submit">
+                                    No-show
+                                </button>
+                            </form>
+
+                            <form method="post" action="{{ url_for(
+                                    'updateRegistration',
+                                    registration_id=registration[
+                                        'registrationID'
+                                    ],
+                                    action='cancel'
+                                ) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                                <button class="button button-small button-danger" type="submit">
+                                    Cancel
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span class="muted">Completed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</section>
+
+<section id="event-details" class="dashboard-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Recommendations</span>
+            <h2>Event audiences and interests</h2>
+        </div>
+    </div>
+
+    <div class="stack">
+        {% for event in events %}
+        <article class="management-card">
+            <div class="management-card-header">
+                <div>
+                    <h3>{{ event["eventName"] }}</h3>
+                    <p>
+                        {{ event["eventDate"] }} |
+                        {{ event["eventStatus"] }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <h4>Audiences</h4>
+
+                    <div class="nested-list">
+                        {% for audience in assigned_audiences.get(
+                        event["eventID"],
+                        []
+                        ) %}
+                        <div class="nested-row">
+                            <span>{{ audience["audienceName"] }}</span>
+
+                            <form method="post" action="{{ url_for(
+                                    'removeEventAudience',
+                                    event_id=event['eventID'],
+                                    audience_id=audience['audienceID']
+                                ) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                                <button class="button-link danger-link" type="submit">
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <form class="inline-form" method="post" action="{{ url_for(
+                            'addEventAudience',
+                            event_id=event['eventID']
+                        ) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                        <select name="audience_id" required>
+                            <option value="">Select audience</option>
+
+                            {% for audience in audiences %}
+                            <option value="{{ audience['audienceID'] }}">
+                                {{ audience["audienceName"] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <button class="button button-small button-secondary" type="submit">
+                            Add audience
+                        </button>
+                    </form>
+                </div>
+
+                <div>
+                    <h4>Interests</h4>
+
+                    <div class="nested-list">
+                        {% for interest in assigned_interests.get(
+                        event["eventID"],
+                        []
+                        ) %}
+                        <div class="nested-row">
+                            <span>{{ interest["interestName"] }}</span>
+
+                            <form method="post" action="{{ url_for(
+                                    'removeEventInterest',
+                                    event_id=event['eventID'],
+                                    interest_id=interest['interestID']
+                                ) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                                <button class="button-link danger-link" type="submit">
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <form class="inline-form" method="post" action="{{ url_for(
+                            'addEventInterest',
+                            event_id=event['eventID']
+                        ) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                        <select name="interest_id" required>
+                            <option value="">Select interest</option>
+
+                            {% for interest in interests %}
+                            <option value="{{ interest['interestID'] }}">
+                                {{ interest["interestName"] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <button class="button button-small button-secondary" type="submit">
+                            Add interest
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

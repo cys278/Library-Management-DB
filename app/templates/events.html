@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Events | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Programs and community</span>
+        <h1>Library events</h1>
+        <p>Find events to attend or opportunities to volunteer.</p>
+    </div>
+</section>
+
+<form class="search-bar" method="get" action="{{ url_for('events') }}">
+    <div class="field search-field">
+        <label class="sr-only" for="q">Search events</label>
+        <input id="q" name="q" type="search" value="{{ search }}" placeholder="Search event name, type or description">
+    </div>
+
+    <button class="button button-primary" type="submit">Search</button>
+
+    {% if search %}
+    <a class="button button-secondary" href="{{ url_for('events') }}">
+        Clear
+    </a>
+    {% endif %}
+</form>
+
+{% if events %}
+<section class="event-grid">
+    {% for event in events %}
+    <article class="event-card">
+        <div class="event-card-header">
+            <div>
+                <span class="badge">{{ event["eventType"] }}</span>
+
+                {% if event["recommended"] %}
+                <span class="badge badge-highlight">
+                    Recommended
+                </span>
+                {% endif %}
+            </div>
+
+            <span class="status status-{{ event['eventStatus']|lower }}">
+                {{ event["eventStatus"] }}
+            </span>
+        </div>
+
+        <h2>{{ event["eventName"] }}</h2>
+        <p>{{ event["description"] or "No description provided." }}</p>
+
+        <dl class="metadata event-metadata">
+            <div>
+                <dt>Date</dt>
+                <dd>{{ event["eventDate"] }}</dd>
+            </div>
+
+            <div>
+                <dt>Time</dt>
+                <dd>
+                    {{ event["startTime"] }}-{{ event["endTime"] }}
+                </dd>
+            </div>
+
+            <div>
+                <dt>Room</dt>
+                <dd>{{ event["roomName"] }}</dd>
+            </div>
+
+            <div>
+                <dt>Registration</dt>
+                <dd>
+                    {{ event["registrationCount"] }}
+                    / {{ event["eventCapacity"] }}
+                </dd>
+            </div>
+        </dl>
+
+        {% if event["audiences"] %}
+        <p class="audience-line">
+            <strong>For:</strong> {{ event["audiences"] }}
+        </p>
+        {% endif %}
+
+        {% if g.account["accountRole"] == "User" %}
+        <div class="event-actions">
+            {% if
+            event["eventStatus"] == "Open"
+            and event["registrationCount"] < event["eventCapacity"] %} <form method="post"
+                action="{{ url_for('registerEvent', event_id=event['eventID']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                <button class="button button-primary" type="submit">
+                    Register
+                </button>
+                </form>
+                {% endif %}
+
+                {% if event["eventStatus"] == "Open" %}
+                <form class="inline-form" method="post"
+                    action="{{ url_for('volunteerEvent', event_id=event['eventID']) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                    <label class="sr-only" for="role-{{ event['eventID'] }}">
+                        Volunteer role
+                    </label>
+
+                    <select id="role-{{ event['eventID'] }}" name="role" required>
+                        <option value="">Volunteer role</option>
+
+                        {% for role in volunteer_roles %}
+                        <option value="{{ role }}">
+                            {{ role }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <button class="button button-secondary" type="submit">
+                        Volunteer
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if event["eventStatus"] != "Open" %}
+                <span class="muted">
+                    Registration and volunteering are not open.
+                </span>
+                {% endif %}
+        </div>
+        {% endif %}
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="empty-state">
+    <h2>No events found</h2>
+    <p>Try another search or check again later.</p>
+</div>
+{% endif %}
+{% endblock %}

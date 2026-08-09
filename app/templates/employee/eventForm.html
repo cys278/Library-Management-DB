@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Create event | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Event management</span>
+        <h1>Create an event</h1>
+
+        <p>
+            The application creates the event as closed, assigns you as its organizer and then applies the selected
+            final status.
+        </p>
+    </div>
+
+    <a class="button button-secondary" href="{{ url_for('employee_Dashboard') }}">
+        Back to dashboard
+    </a>
+</section>
+
+<form class="form-card form-card-wide" method="post" action="{{ url_for('newEvent') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+    <div class="form-grid">
+        <div class="field field-span-2">
+            <label for="event_name">Event name</label>
+            <input id="event_name" name="event_name" type="text" required>
+        </div>
+
+        <div class="field">
+            <label for="event_type">Event type</label>
+
+            <select id="event_type" name="event_type" required>
+                <option value="">Select event type</option>
+
+                {% for event_type in event_types %}
+                <option value="{{ event_type }}">{{ event_type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="event_status">Initial public status</label>
+
+            <select id="event_status" name="event_status" required>
+                <option value="Closed">Closed</option>
+                <option value="Open">Open</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+
+        <div class="field field-span-2">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="5"></textarea>
+        </div>
+
+        <div class="field">
+            <label for="event_date">Date</label>
+            <input id="event_date" name="event_date" type="date" required>
+        </div>
+
+        <div class="field">
+            <label for="room_id">Room</label>
+
+            <select id="room_id" name="room_id" required>
+                <option value="">Select room</option>
+
+                {% for room in rooms %}
+                <option value="{{ room['roomID'] }}">
+                    {{ room["roomName"] }}
+                    | Floor {{ room["floor"] }}
+                    | Maximum {{ room["maximumCapacity"] }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="start_time">Start time</label>
+            <input id="start_time" name="start_time" type="time" required>
+        </div>
+
+        <div class="field">
+            <label for="end_time">End time</label>
+            <input id="end_time" name="end_time" type="time" required>
+        </div>
+
+        <div class="field">
+            <label for="capacity">Event capacity</label>
+            <input id="capacity" name="capacity" type="number" min="1" required>
+            <small>Capacity cannot exceed the selected room.</small>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button class="button button-primary" type="submit">
+            Create event
+        </button>
+
+        <a class="button button-secondary" href="{{ url_for('employee_Dashboard') }}">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

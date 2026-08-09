@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Request an item | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Collection suggestion</span>
+        <h1>Request an item</h1>
+
+        <p>
+            Suggest something that should be considered for the library
+            collection.
+        </p>
+    </div>
+</section>
+
+<form class="form-card form-card-wide" method="post" action="{{ url_for('acquisitionRequest') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+    <div class="form-grid">
+        <div class="field field-span-2">
+            <label for="title">Title or item name</label>
+            <input id="title" name="title" type="text" required>
+        </div>
+
+        <div class="field">
+            <label for="item_type">Item type</label>
+            <input id="item_type" name="item_type" type="text" list="acquisition-types" required>
+        </div>
+
+        <div class="field">
+            <label for="author">Author or creator</label>
+            <input id="author" name="author" type="text">
+        </div>
+
+        <div class="field">
+            <label for="quantity">Proposed quantity</label>
+            <input id="quantity" name="quantity" type="number" min="1" value="1" required>
+        </div>
+
+        <div class="field">
+            <label for="estimated_cost">Estimated total cost</label>
+            <input id="estimated_cost" name="estimated_cost" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+    </div>
+
+    <datalist id="acquisition-types">
+        {% for item_type in library_item_types %}
+        <option value="{{ item_type }}"></option>
+        {% endfor %}
+        <option value="Equipment"></option>
+        <option value="Technology"></option>
+        <option value="Technology Kit"></option>
+        <option value="Gaming Equipment"></option>
+    </datalist>
+
+    <div class="form-actions">
+        <button class="button button-primary" type="submit">
+            Submit request
+        </button>
+    </div>
+</form>
+{% endblock %}

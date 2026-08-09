@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Your library</span>
+        <h1>Hello, {{ person["firstName"] }}.</h1>
+
+        <p>
+            Search the collection, manage your loans and discover events happening at the library.
+        </p>
+    </div>
+
+    <a class="button button-primary" href="{{ url_for('items') }}">
+        Find an item
+    </a>
+</section>
+
+<section class="stat-grid">
+    <article class="stat-card">
+        <span>Membership</span>
+
+        {% if person["memberID"] %}
+        <strong>{{ person["membershipStatus"] }}</strong>
+        <small>Member since {{ person["membershipDate"] }}</small>
+        {% else %}
+        <strong>Not a member</strong>
+        <small>Ask library staff about membership.</small>
+        {% endif %}
+    </article>
+
+    <article class="stat-card">
+        <span>Active loans</span>
+        <strong>{{ active_loans }}</strong>
+        <a href="{{ url_for('loans') }}">View loans</a>
+    </article>
+
+    <article class="stat-card">
+        <span>Unpaid fines</span>
+        <strong>${{ "%.2f"|format(unpaid_fines) }}</strong>
+        <a href="{{ url_for('loans') }}">View details</a>
+    </article>
+</section>
+
+<section>
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Library services</span>
+            <h2>What would you like to do?</h2>
+        </div>
+    </div>
+
+    <div class="action-grid">
+        <a class="action-card" href="{{ url_for('items') }}">
+            <span class="action-number">01</span>
+            <h3>Find and borrow</h3>
+            <p>Search books, magazines, equipment and online resources.</p>
+        </a>
+
+        <a class="action-card" href="{{ url_for('events') }}">
+            <span class="action-number">02</span>
+            <h3>Explore events</h3>
+            <p>Find events, register to attend or apply as volunteer.</p>
+        </a>
+
+        <a class="action-card" href="{{ url_for('donate') }}">
+            <span class="action-number">03</span>
+            <h3>Donate materials</h3>
+            <p>Submit books and other useful materials for review.</p>
+        </a>
+
+        <a class="action-card" href="{{ url_for('acquisitionRequest') }}">
+            <span class="action-number">04</span>
+            <h3>Request an item</h3>
+            <p>Suggest new item that the library should acquire.</p>
+        </a>
+
+        <a class="action-card" href="{{ url_for('helpRequest') }}">
+            <span class="action-number">05</span>
+            <h3>Ask a librarian</h3>
+            <p>Send question and follow the response from library staff.</p>
+        </a>
+    </div>
+</section>
+{% endblock %}

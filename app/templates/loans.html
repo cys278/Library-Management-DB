@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}My loans | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Borrowing</span>
+        <h1>My loans</h1>
+        <p>Review your active and previously returned items.</p>
+    </div>
+
+    <a class="button button-primary" href="{{ url_for('items') }}">
+        Borrow another item
+    </a>
+</section>
+
+{% if loans %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Barcode</th>
+                <th>Borrowed</th>
+                <th>Due</th>
+                <th>Returned</th>
+                <th>Fine</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for loan in loans %}
+            <tr>
+                <td>
+                    <strong>{{ loan["itemTitle"] }}</strong>
+                    <small>{{ loan["itemType"] }}</small>
+                </td>
+
+                <td>{{ loan["barcode"] }}</td>
+                <td>{{ loan["borrowDateTime"] }}</td>
+                <td>{{ loan["dueDateTime"] }}</td>
+
+                <td>
+                    {% if loan["returnDateTime"] %}
+                    {{ loan["returnDateTime"] }}
+                    {% else %}
+                    <span class="status status-open">Active</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if loan["amount"] is not none %}
+                    ${{ "%.2f"|format(loan["amount"]) }}
+                    <small>{{ loan["paymentStatus"] }}</small>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if not loan["returnDateTime"] %}
+                    <form method="post" action="{{ url_for('returnItem', loan_id=loan['loanID']) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+                        <button class="button button-small button-secondary" type="submit">
+                            Return
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="muted">Completed</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>No loans yet</h2>
+    <p>Items you borrow will appear here.</p>
+    <a class="button button-primary" href="{{ url_for('items') }}">
+        Browse collection
+    </a>
+</div>
+{% endif %}
+{% endblock %}

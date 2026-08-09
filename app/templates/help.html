@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Ask for help | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <span class="eyebrow">Ask a librarian</span>
+        <h1>How can we help?</h1>
+
+        <p>
+            Send your question to library staff and check its status below.
+        </p>
+    </div>
+</section>
+
+<div class="two-column-layout">
+    <form class="form-card" method="post" action="{{ url_for('helpRequest') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+        <h2>New help request</h2>
+
+        <div class="field">
+            <label for="issue">Topic</label>
+            <input id="issue" name="issue" type="text" placeholder="For example: Research help" required>
+        </div>
+
+        <div class="field">
+            <label for="message">Your question</label>
+            <textarea id="message" name="message" rows="7" required></textarea>
+        </div>
+
+        <button class="button button-primary" type="submit">
+            Send question
+        </button>
+    </form>
+
+    <section>
+        <div class="section-heading compact">
+            <div>
+                <h2>Previous requests</h2>
+            </div>
+        </div>
+
+        {% if help_requests %}
+        <div class="stack">
+            {% for help in help_requests %}
+            <article class="request-card">
+                <div class="request-card-header">
+                    <strong>{{ help["issue"] }}</strong>
+
+                    <span class="status status-{{ help['requestStatus']|lower|replace(' ', '-') }}">
+                        {{ help["requestStatus"] }}
+                    </span>
+                </div>
+
+                <p>{{ help["messages"] }}</p>
+                <small>Sent {{ help["createdAt"] }}</small>
+
+                {% if help["response"] %}
+                <div class="response-box">
+                    <strong>Librarian response</strong>
+                    <p>{{ help["response"] }}</p>
+
+                    {% if help["resolvedAt"] %}
+                    <small>
+                        Resolved {{ help["resolvedAt"] }}
+                    </small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state small-empty">
+            <p>You have not submitted any help requests.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

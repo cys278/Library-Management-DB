@@ -1,0 +1,45 @@
+ERROR:
+command inside app folder: lsof ../library.db
+COMMAND    PID             USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
+python3.1 4040 priyanshsarvaiya   73u   REG   1,18   262144 62306526 ../library.db
+
+command inside app folder: ps -p 4040 -o pid,ppid,etime,command
+  PID  PPID ELAPSED COMMAND
+ 4040 53870   02:42 /opt/anaconda3/bin/python -m ipykernel_launcher --f=/Users/priyanshsarvaiya/Library/J
+
+command inside app folder: kill 4040(if its kernel then use PID t kill)
+
+
+(.venv) (base) ➜  app ./createAccount.sh                  
+Created User account: person 1, Aisha Khan, aisha.khan26@gmail.com
+Created User account: person 2, Mateo Rodriguez, mateorodriguez@icloud.com
+Created User account: person 3, Chloe Martin, chloe.martin@outlook.com
+Created User account: person 4, Arjun Mehta, arjunmehta88@gmail.com
+Created User account: person 5, Sofia Rossi, sofia.rossi@icloud.com
+Created User account: person 6, Noah Williams, noahwilliams@proton.me
+Created User account: person 7, Yuna Park, yuna.park03@gmail.com
+Created User account: person 8, Liam O'Connor, liamoconnor@outlook.com
+Created User account: person 9, Fatima Zahra, fatima.zahra@icloud.com
+Created User account: person 10, Ethan Chen, ethanchen98@gmail.com
+Created User account: person 11, Grace Liu, grace.liu@outlook.com
+Created User account: person 12, Omar Hassan, omarhassan@icloud.com
+Created Employee account: person 13, Emily Carter, emily.carter@notgooglelibrary.ca
+Created Employee account: person 14, Daniel Kim, danielkim@notgooglelibrary.ca
+Created Employee account: person 15, Priya Patel, priya.patel@notgooglelibrary.ca
+Created Employee account: person 16, Lucas Silva, lucassilva@notgooglelibrary.ca
+Created Employee account: person 17, Maya Thompson, maya.thompson@notgooglelibrary.ca
+Created Employee account: person 18, Gabriel Nakamura, gabrielnakamura@notgooglelibrary.ca
+Created Employee account: person 19, Isabella Brown, isabella.brown@notgooglelibrary.ca
+Created Employee account: person 20, Samuel Adeyemi, samueladeyemi@notgooglelibrary.ca
+Created Employee account: person 21, Nora Andersen, nora.andersen@notgooglelibrary.ca
+Created Employee account: person 22, Hugo Laurent, hugolaurent@notgooglelibrary.ca
+Created User account: person 23, Zainab Ali, zainab.ali@gmail.com
+Created User account: person 24, Jack Murphy, jackmurphy@icloud.com
+Created User account: person 25, Camila Santos, camila.santos@outlook.com
+Created User account: person 26, Wei Zhang, weizhang@gmail.com
+Created User account: person 27, Layla Johnson, layla.johnson@icloud.com
+Created User account: person 28, Benjamin Taylor, benjamintaylor@yahoo.com
+
+Created: 28
+Skipped: 0
+Total in password file: 28

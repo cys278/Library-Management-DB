@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Not Google Library{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="{{ url_for('index') }}">
+                <span class="brand-mark">NGL</span>
+
+                <span>
+                    <strong>Not Google Library</strong>
+                    <small>Read. Learn. Connect.</small>
+                </span>
+            </a>
+
+            <nav class="main-nav" aria-label="Main navigation">
+                {% if g.account %}
+                {% if g.account["accountRole"] == "User" %}
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('items') }}">Find items</a>
+                <a href="{{ url_for('loans') }}">My loans</a>
+                <a href="{{ url_for('events') }}">Events</a>
+                <a href="{{ url_for('donate') }}">Donate</a>
+                <a href="{{ url_for('acquisitionRequest') }}">
+                    Request an item
+                </a>
+                <a href="{{ url_for('helpRequest') }}">Ask for help</a>
+                {% else %}
+                <a href="{{ url_for('employee_Dashboard') }}">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('items') }}">Collection</a>
+                <a href="{{ url_for('events') }}">Events</a>
+                {% endif %}
+
+                <form class="logout-form" method="post" action="{{ url_for('logout') }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                    <button class="nav-button" type="submit">
+                        Log out
+                    </button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('login') }}">Log in</a>
+                <a class="nav-link-primary" href="{{ url_for('createAccount') }}">
+                    Create account
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <section class="flash-list" aria-label="Notifications">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>Not Google Library | Lower Mainland, British Columbia</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Create account | Not Google Library{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-intro">
+        <span class="eyebrow">New online account</span>
+        <h1>Connect your library record</h1>
+
+        <p>
+            Create your account using your email address. This does not automatically create your membership.
+        </p>
+    </div>
+
+    <div class="form-card">
+        <h2>Create account</h2>
+
+        <form method="post" action="{{ url_for('createAccount') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="first_name">First Name</label>
+                    <input id="first_name" name="first_name" type="text" autocomplete="given-name" required>
+                </div>
+
+                <div class="field">
+                    <label for="last_name">Last Name</label>
+                    <input id="last_name" name="last_name" type="text" autocomplete="family-name" required>
+                </div>
+
+                <div class="field field-span-2">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required>
+                </div>
+
+                <div class="field">
+                    <label for="phone_number">Phone Number</label>
+                    <input id="phone_number" name="phone_number" type="tel" autocomplete="tel">
+                </div>
+
+                <div class="field">
+                    <label for="date_of_birth">Date of birth</label>
+                    <input id="date_of_birth" name="date_of_birth" type="date" autocomplete="bday">
+                </div>
+
+                <div class="field field-span-2">
+                    <label for="address">Address</label>
+                    <input id="address" name="address" type="text" autocomplete="street-address">
+                </div>
+
+                <div class="field">
+                    <label for="password">Choose a password</label>
+                    <input id="password" name="password" type="password" minlength="10" autocomplete="new-password"
+                        required>
+                    <small>Use at least 10 characters</small>
+                </div>
+
+                <div class="field">
+                    <label for="confirmation">Confirm password</label>
+                    <input id="confirmation" name="confirmation" type="password" minlength="10"
+                        autocomplete="new-password" required>
+                </div>
+            </div>
+
+            <button class="button button-primary button-full" type="submit">
+                Create account
+            </button>
+        </form>
+
+        <p class="form-footer">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Log in</a>
+        </p>
+    </div>
+</section>
+{% endblock %}
