@@ -17,7 +17,7 @@
         <div class="header-inner">
             <a class="brand" href="{{ url_for('index') }}" aria-label="Not Google Library home">
                 <span class="brand-mark" aria-hidden="true">
-                    <img src="{{url_for('static',filename='book-logo.svg')}}alt="">
+                    <img src="{{url_for('static',filename='book-logo.svg')}}" alt="">
                 </span>
 
                 <span class="brand-copy">
@@ -50,9 +50,6 @@
                 <a class="{% if request.endpoint in ['events','newEvent'] %}is-active{% endif %}" href="{{ url_for('events') }}">Events</a>
                 {% endif %}
 
-                <span class="account-chip" title="Signed-in account role">
-                   {{g.account["accountRole"]}}
-                </span>
                 
 
                 <form class="logout-form" method="post" action="{{ url_for('logout') }}">
